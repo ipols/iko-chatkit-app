@@ -345,38 +345,6 @@ export function ChatKitPanel({
 
   return (
     <div className="relative pb-8 flex h-[90vh] w-full rounded-2xl flex-col overflow-hidden bg-white shadow-sm transition-colors dark:bg-slate-900">
-      <style>{`
-        .iko-logo-wrapper {
-          position: absolute;
-          z-index: 1;
-          pointer-events: none;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .iko-logo-container {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          margin-bottom: 200px;
-        }
-        .iko-logo {
-          width: 64px;
-          height: 64px;
-          margin-bottom: 24px;
-        }
-      `}</style>
-      <div className="iko-logo-wrapper">
-        <div className="iko-logo-container">
-          <img
-            src="/iko-logo.svg"
-            alt="iKo Logo"
-            className="iko-logo"
-          />
-        </div>
-      </div>
       <ChatKit
         key={widgetInstanceKey}
         control={chatkit.control}
