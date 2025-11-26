@@ -279,7 +279,8 @@ export function ChatKitPanel({
       },
     },
     threadItemActions: {
-      feedback: false,
+      feedback: true,  // Enable thumbs up/down feedback buttons
+      retry: true,     // Enable retry button to regenerate responses
     },
     onClientTool: async (invocation: {
       name: string;
