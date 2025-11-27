@@ -282,6 +282,50 @@ export function ChatKitPanel({
       feedback: true,  // Enable thumbs up/down feedback buttons
       retry: true,     // Enable retry button to regenerate responses
     },
+    widgets: {
+      onAction: async (
+        action: { type: string; payload?: Record<string, unknown> },
+        widgetItem: { id: string; widget: unknown }
+      ) => {
+        if (isDev) {
+          console.log("[ChatKitPanel] Widget action triggered:", { action, widgetItem });
+        }
+
+        // Handle feedback widget actions
+        if (action.type === "feedback.submit") {
+          const feedbackValue = action.payload?.value;
+          const kind = feedbackValue === "up" ? "positive" : feedbackValue === "down" ? "negative" : null;
+
+          if (kind) {
+            console.log("[ChatKitPanel] Feedback widget clicked:", { kind, action, widgetItem });
+
+            try {
+              const response = await fetch("/api/feedback", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  kind,
+                  widgetId: widgetItem.id,
+                  actionType: action.type,
+                  actionPayload: action.payload,
+                  timestamp: new Date().toISOString(),
+                }),
+              });
+
+              if (response.ok) {
+                console.log("[ChatKitPanel] Feedback stored successfully");
+              } else {
+                console.error("[ChatKitPanel] Failed to store feedback:", await response.text());
+              }
+            } catch (error) {
+              console.error("[ChatKitPanel] Error storing feedback:", error);
+            }
+          }
+        }
+      },
+    },
     onClientTool: async (invocation: {
       name: string;
       params: Record<string, unknown>;

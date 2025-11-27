@@ -21,25 +21,32 @@ export async function POST(req: NextRequest) {
       userMessage,
       assistantResponse,
       sessionId,
+      widgetId,
+      actionType,
+      actionPayload,
+      timestamp: providedTimestamp,
     } = body;
 
-    if (!kind || !threadId) {
+    if (!kind) {
       return NextResponse.json(
-        { error: "Missing required fields: kind, threadId" },
+        { error: "Missing required field: kind" },
         { status: 400 }
       );
     }
 
-    const timestamp = new Date().toISOString();
+    const timestamp = providedTimestamp || new Date().toISOString();
 
     const record = await base("Feedback").create({
       Timestamp: timestamp,
-      "Thread ID": threadId,
+      "Thread ID": threadId || "",
       "Item IDs": itemIds?.join(", ") || "",
       "Feedback Type": kind,
       "User Message": userMessage || "",
       "Assistant Response": assistantResponse || "",
       "Session ID": sessionId || "",
+      "Widget ID": widgetId || "",
+      "Action Type": actionType || "",
+      "Action Payload": actionPayload ? JSON.stringify(actionPayload) : "",
     });
 
     console.log("Feedback stored in Airtable:", record.id);
