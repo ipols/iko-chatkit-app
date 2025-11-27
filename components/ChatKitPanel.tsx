@@ -279,52 +279,7 @@ export function ChatKitPanel({
       },
     },
     threadItemActions: {
-      feedback: true,  // Enable thumbs up/down feedback buttons
       retry: true,     // Enable retry button to regenerate responses
-    },
-    widgets: {
-      onAction: async (
-        action: { type: string; payload?: Record<string, unknown> },
-        widgetItem: { id: string; widget: unknown }
-      ) => {
-        if (isDev) {
-          console.log("[ChatKitPanel] Widget action triggered:", { action, widgetItem });
-        }
-
-        // Handle feedback widget actions
-        if (action.type === "feedback.submit") {
-          const feedbackValue = action.payload?.value;
-          const kind = feedbackValue === "up" ? "positive" : feedbackValue === "down" ? "negative" : null;
-
-          if (kind) {
-            console.log("[ChatKitPanel] Feedback widget clicked:", { kind, action, widgetItem });
-
-            try {
-              const response = await fetch("/api/feedback", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  kind,
-                  widgetId: widgetItem.id,
-                  actionType: action.type,
-                  actionPayload: action.payload,
-                  timestamp: new Date().toISOString(),
-                }),
-              });
-
-              if (response.ok) {
-                console.log("[ChatKitPanel] Feedback stored successfully");
-              } else {
-                console.error("[ChatKitPanel] Failed to store feedback:", await response.text());
-              }
-            } catch (error) {
-              console.error("[ChatKitPanel] Error storing feedback:", error);
-            }
-          }
-        }
-      },
     },
     onClientTool: async (invocation: {
       name: string;
@@ -372,36 +327,6 @@ export function ChatKitPanel({
       // Note that Chatkit UI handles errors for your users.
       // Thus, your app code doesn't need to display errors on UI.
       console.error("ChatKit error", error);
-    },
-    onLog: async ({ name, data }: { name: string; data?: Record<string, unknown> }) => {
-      if (isDev) {
-        console.debug("[ChatKitPanel] Log event", { name, data });
-      }
-
-      // Check if this is a feedback event
-      if (name.includes("feedback") || data?.type === "items.feedback") {
-        console.log("[ChatKitPanel] Feedback detected:", { name, data });
-
-        try {
-          await fetch("/api/feedback", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              threadId: data?.thread_id || data?.threadId,
-              itemIds: data?.item_ids || data?.itemIds,
-              kind: data?.kind,
-              userMessage: data?.user_message,
-              assistantResponse: data?.assistant_response,
-              sessionId: data?.session_id || data?.sessionId,
-              rawData: data,
-            }),
-          });
-        } catch (error) {
-          console.error("[ChatKitPanel] Failed to store feedback:", error);
-        }
-      }
     },
   });
 
