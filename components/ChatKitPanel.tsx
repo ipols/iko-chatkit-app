@@ -329,6 +329,36 @@ export function ChatKitPanel({
       // Thus, your app code doesn't need to display errors on UI.
       console.error("ChatKit error", error);
     },
+    onLog: async ({ name, data }: { name: string; data?: Record<string, unknown> }) => {
+      if (isDev) {
+        console.debug("[ChatKitPanel] Log event", { name, data });
+      }
+
+      // Check if this is a feedback event
+      if (name.includes("feedback") || data?.type === "items.feedback") {
+        console.log("[ChatKitPanel] Feedback detected:", { name, data });
+
+        try {
+          await fetch("/api/feedback", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              threadId: data?.thread_id || data?.threadId,
+              itemIds: data?.item_ids || data?.itemIds,
+              kind: data?.kind,
+              userMessage: data?.user_message,
+              assistantResponse: data?.assistant_response,
+              sessionId: data?.session_id || data?.sessionId,
+              rawData: data,
+            }),
+          });
+        } catch (error) {
+          console.error("[ChatKitPanel] Failed to store feedback:", error);
+        }
+      }
+    },
   });
 
   const activeError = errors.session ?? errors.integration;

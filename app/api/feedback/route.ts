@@ -1,0 +1,58 @@
+import { NextRequest, NextResponse } from "next/server";
+import Airtable from "airtable";
+
+const AIRTABLE_API_TOKEN = process.env.AIRTABLE_API_TOKEN;
+const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+
+if (!AIRTABLE_API_TOKEN || !AIRTABLE_BASE_ID) {
+  console.error("Missing Airtable configuration");
+}
+
+const airtable = new Airtable({ apiKey: AIRTABLE_API_TOKEN });
+const base = airtable.base(AIRTABLE_BASE_ID!);
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      threadId,
+      itemIds,
+      kind,
+      userMessage,
+      assistantResponse,
+      sessionId,
+    } = body;
+
+    if (!kind || !threadId) {
+      return NextResponse.json(
+        { error: "Missing required fields: kind, threadId" },
+        { status: 400 }
+      );
+    }
+
+    const timestamp = new Date().toISOString();
+
+    const record = await base("Feedback").create({
+      Timestamp: timestamp,
+      "Thread ID": threadId,
+      "Item IDs": itemIds?.join(", ") || "",
+      "Feedback Type": kind,
+      "User Message": userMessage || "",
+      "Assistant Response": assistantResponse || "",
+      "Session ID": sessionId || "",
+    });
+
+    console.log("Feedback stored in Airtable:", record.id);
+
+    return NextResponse.json({ success: true, recordId: record.id });
+  } catch (error) {
+    console.error("Error storing feedback:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to store feedback",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
